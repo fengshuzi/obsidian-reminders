@@ -1,0 +1,275 @@
+/* 主容器 - Thino 风格 */
+.reminders-view {
+    padding: 0;
+    height: 100%;
+    overflow-y: auto;
+    background: var(--background-primary);
+}
+
+/* 输入区域 - 顶部固定 */
+.reminders-input-area {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--background-primary);
+    border-bottom: 1px solid var(--background-modifier-border);
+    padding: 20px 40px;
+}
+
+.reminders-input-wrapper {
+    max-width: 900px;
+    margin: 0 auto;
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.reminders-input-wrapper:focus-within {
+    border-color: var(--interactive-accent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.reminders-input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    resize: none;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-normal);
+    font-family: var(--font-text);
+    outline: none;
+    margin-bottom: 12px;
+    min-height: 60px;
+}
+
+.reminders-input::placeholder {
+    color: var(--text-muted);
+}
+
+.reminders-input-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px;
+    border-top: 1px solid var(--background-modifier-border);
+}
+
+.reminders-input-toolbar {
+    display: flex;
+    gap: 8px;
+}
+
+.reminders-toolbar-btn {
+    padding: 8px;
+    border: 1px solid var(--background-modifier-border);
+    background: var(--background-primary);
+    cursor: pointer;
+    border-radius: 6px;
+    color: var(--text-muted);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.reminders-toolbar-btn:hover {
+    background: var(--background-modifier-hover);
+    border-color: var(--interactive-accent);
+    color: var(--text-normal);
+}
+
+.reminders-toolbar-btn.active {
+    background: var(--interactive-accent);
+    border-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+}
+
+.reminders-time-input {
+    width: 100%;
+    margin-top: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    background: var(--background-primary);
+    color: var(--text-normal);
+    font-size: 14px;
+    font-family: var(--font-text);
+    transition: all 0.2s;
+}
+
+.reminders-time-input:focus {
+    outline: none;
+    border-color: var(--interactive-accent);
+    box-shadow: 0 0 0 2px var(--interactive-accent-hover);
+}
+
+.reminders-cancel-btn {
+    padding: 8px 20px;
+    border: none;
+    background: var(--background-secondary);
+    color: var(--text-normal);
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.reminders-cancel-btn:hover {
+    background: var(--background-modifier-hover);
+}
+
+.reminders-submit-btn {
+    padding: 8px 20px;
+    border: none;
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.reminders-submit-btn:hover {
+    background: var(--interactive-accent-hover);
+    transform: translateY(-1px);
+}
+
+/* 列表容器 */
+.reminders-list-container {
+    padding: 32px 40px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* 空状态 */
+.reminders-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px;
+    text-align: center;
+}
+
+.reminders-empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.reminders-empty-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-normal);
+    margin-bottom: 8px;
+}
+
+.reminders-empty-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+/* 提醒项 */
+.reminder-item {
+    margin-bottom: 20px;
+}
+
+/* 卡片样式 - Thino 风格 */
+.reminder-card {
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.reminder-card:hover {
+    border-color: var(--interactive-accent);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+/* 卡片头部 - 时间（左）+ 操作按钮（右）*/
+.reminder-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+/* 时间显示 - 在卡片内左上角 */
+.reminder-card-time {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+/* 右上角操作按钮 */
+.reminder-card-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.reminder-card:hover .reminder-card-actions {
+    opacity: 1;
+}
+
+.reminder-more-btn {
+    padding: 6px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 6px;
+    color: var(--text-muted);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.reminder-more-btn:hover {
+    background: var(--background-modifier-hover);
+    color: var(--text-normal);
+}
+
+/* 卡片内容 */
+.reminder-card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.reminder-card-title {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-normal);
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .reminders-list-container {
+        padding: 20px 16px;
+    }
+    
+    .reminders-input-area {
+        padding: 16px;
+    }
+}
