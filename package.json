@@ -4,7 +4,7 @@
     "description": "Reminders management plugin for Obsidian with sidebar view.",
     "main": "main.js",
     "scripts": {
-        "build": "node esbuild.config.mjs production",
+        "build": "node esbuild.config.mjs production && cp manifest.json styles.css dist/",
         "dev": "node esbuild.config.mjs",
         "deploy": "node deploy.mjs",
         "build-deploy": "npm run build && node deploy.mjs",
