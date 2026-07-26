@@ -212,15 +212,15 @@ export class RemindersView extends ItemView {
 
     private autoResizeTextarea(): void {
         if (!this.textarea) return;
-        this.textarea.style.height = "auto";
+        this.textarea.setCssProps({ height: "auto" });
         const maxHeight = 160;
-        this.textarea.style.height = `${Math.min(this.textarea.scrollHeight, maxHeight)}px`;
+        this.textarea.setCssProps({ height: `${Math.min(this.textarea.scrollHeight, maxHeight)}px` });
     }
 
     private resetComposer(): void {
         if (this.textarea) {
             this.textarea.value = "";
-            this.textarea.style.height = "auto";
+            this.textarea.setCssProps({ height: "auto" });
             this.textarea.placeholder = "添加提醒事项...";
         }
         this.timeDisplay?.empty();
