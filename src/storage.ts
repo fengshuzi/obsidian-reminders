@@ -2,6 +2,13 @@ import { exec } from "child_process";
 import { Reminder } from "./types";
 import { Notice, Platform } from "obsidian";
 
+export type ReminderPermission = "authorized" | "denied" | "unknown";
+
+export interface RemindersResult {
+    reminders: Reminder[];
+    permission: ReminderPermission;
+}
+
 const execAsync = (command: string, options: { timeout: number }): Promise<string> => {
     return new Promise<string>((resolve, reject) => {
         exec(command, options, (err: unknown, stdout: unknown) => {
@@ -58,24 +65,34 @@ export class ReminderStorage {
             .replace(/\n/g, "\\n");
     }
 
-    async getAllReminders(): Promise<Reminder[]> {
+    private parsePermission(status: unknown): ReminderPermission {
+        if (status === 3 || status === 4) return "authorized";
+        if (status === 1 || status === 2 || status === 5) return "denied";
+        return "unknown";
+    }
+
+    async getAllReminders(): Promise<RemindersResult> {
         const listName = this.escapeJXA(this.listName);
-        const script = `ObjC.import("EventKit");var store=$.EKEventStore.alloc.init;var status=$.EKEventStore.authorizationStatusForEntityType(1);if(status!=3){store.requestAccessToEntityTypeCompletion(1,null);delay(3);}var cals=store.calendarsForEntityType(1);var predicate=store.predicateForRemindersInCalendars(cals);var allReminders=store.remindersMatchingPredicate(predicate);var result=[];var valid=function(n,min,max){n=Number(n);return isFinite(n)&&n>=min&&n<=max;};for(var i=0;i<allReminders.count;i++){var r=allReminders.objectAtIndex(i);if(r.completed)continue;var cal=ObjC.unwrap(r.calendar.title);if(cal!=="${listName}")continue;var item={title:ObjC.unwrap(r.title),id:ObjC.unwrap(r.calendarItemIdentifier),list:cal};var comps=r.dueDateComponents;if(comps){var y=Number(comps.year),m=Number(comps.month),d=Number(comps.day);if(valid(y,1,9999)&&valid(m,1,12)&&valid(d,1,31)){var h=Number(comps.hour),minute=Number(comps.minute);if(!valid(h,0,23))h=0;if(!valid(minute,0,59))minute=0;var due=new Date(y,m-1,d,h,minute);if(!isNaN(due.getTime()))item.due=due.toISOString();}}result.push(item);}JSON.stringify(result);`;
+        const script = `ObjC.import("EventKit");var store=$.EKEventStore.alloc.init;var status=$.EKEventStore.authorizationStatusForEntityType(1);if(status===0){store.requestAccessToEntityTypeCompletion(1,null);delay(3);status=$.EKEventStore.authorizationStatusForEntityType(1);}var authorized=status===3||status===4;var result=[];if(authorized){var cals=store.calendarsForEntityType(1);var predicate=store.predicateForRemindersInCalendars(cals);var allReminders=store.remindersMatchingPredicate(predicate);var valid=function(n,min,max){n=Number(n);return isFinite(n)&&n>=min&&n<=max;};for(var i=0;i<allReminders.count;i++){var r=allReminders.objectAtIndex(i);if(r.completed)continue;var cal=ObjC.unwrap(r.calendar.title);if(cal!=="${listName}")continue;var item={title:ObjC.unwrap(r.title),id:ObjC.unwrap(r.calendarItemIdentifier),list:cal};var comps=r.dueDateComponents;if(comps){var y=Number(comps.year),m=Number(comps.month),d=Number(comps.day);if(valid(y,1,9999)&&valid(m,1,12)&&valid(d,1,31)){var h=Number(comps.hour),minute=Number(comps.minute);if(!valid(h,0,23))h=0;if(!valid(minute,0,59))minute=0;var due=new Date(y,m-1,d,h,minute);if(!isNaN(due.getTime()))item.due=due.toISOString();}}result.push(item);}}JSON.stringify({authorizationStatus:Number(status),reminders:result});`;
 
         const result = await this.runJXA(script);
-        if (!result) return [];
+        if (!result) return { reminders: [], permission: "unknown" };
 
         try {
             const parsed: unknown = JSON.parse(result);
-            if (!Array.isArray(parsed)) return [];
-            return parsed.filter(
-                (item): item is Reminder =>
+            if (!parsed || typeof parsed !== "object") {
+                return { reminders: [], permission: "unknown" };
+            }
+            const data = parsed as Record<string, unknown>;
+            const permission = this.parsePermission(data.authorizationStatus);
+            if (!Array.isArray(data.reminders)) return { reminders: [], permission };
+            const reminders = data.reminders.filter(
+                (item): item is Record<string, unknown> =>
                     item !== null &&
                     typeof item === "object" &&
                     typeof (item as Record<string, unknown>).id === "string" &&
                     typeof (item as Record<string, unknown>).title === "string"
-            ).map((item) => {
-                const obj = item as Record<string, unknown>;
+            ).map((obj): Reminder => {
                 return {
                     id: obj.id as string,
                     title: obj.title as string,
@@ -86,8 +103,9 @@ export class ReminderStorage {
                     updated: "",
                 };
             });
+            return { reminders, permission };
         } catch {
-            return [];
+            return { reminders: [], permission: "unknown" };
         }
     }
 
