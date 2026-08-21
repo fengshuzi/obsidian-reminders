@@ -1,6 +1,6 @@
 {
   "name": "lite-reminders",
-  "version": "1.0.8",
+  "version": "1.0.7",
   "description": "macOS Reminders integration with a lightweight, flash-note style interface.",
   "main": "main.js",
   "scripts": {
