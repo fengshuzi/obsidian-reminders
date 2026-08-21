@@ -1,6 +1,8 @@
 import { ItemView, WorkspaceLeaf, Menu, Modal, setIcon } from "obsidian";
 import type RemindersPlugin from "../main";
 import { Reminder } from "../types";
+import { REMINDERS_AUTHORIZATION_INSTRUCTIONS } from "../reminders-result";
+import type { RemindersLoadResult } from "../reminders-result";
 import { DateTimePickerModal } from "../components/DateTimePicker";
 
 export const VIEW_TYPE_REMINDERS = "reminders-view";
@@ -248,24 +250,21 @@ export class RemindersView extends ItemView {
     }
 
     private async loadAndRender(): Promise<void> {
-        const reminders = await this.plugin.storage.getAllReminders();
-        this.renderRemindersContent(reminders);
+        const result = await this.plugin.storage.getAllReminders();
+        this.renderRemindersContent(result);
     }
 
     private renderRemindersList(container: HTMLElement): void {
         this.listContainer = container.createDiv("reminders-list-container");
         this.listContainer.createDiv({ text: "加载中...", cls: "reminders-loading" });
 
-        void this.plugin.storage.getAllReminders().then((reminders) => {
-            if (!this.listContainer) return;
-            this.listContainer.empty();
-            this.renderRemindersContent(reminders, this.listContainer);
-        });
+        void this.loadAndRender();
     }
 
-    private renderRemindersContent(reminders: Reminder[], container?: HTMLElement): void {
+    private renderRemindersContent(result: RemindersLoadResult, container?: HTMLElement): void {
         const listContainer = container || this.listContainer;
         if (!listContainer) return;
+        const { authorization, reminders } = result;
 
         listContainer.empty();
 
@@ -277,11 +276,29 @@ export class RemindersView extends ItemView {
         refreshBtn.onclick = () => {
             void this.loadAndRender();
         };
-        const addBtn = headerActions.createEl("button", { cls: "reminders-add-btn", text: "添加" });
-        setIcon(addBtn.createSpan(), "plus");
-        addBtn.onclick = () => {
-            this.showCreateComposer();
-        };
+        if (authorization === "full-access") {
+            const addBtn = headerActions.createEl("button", { cls: "reminders-add-btn", text: "添加" });
+            setIcon(addBtn.createSpan(), "plus");
+            addBtn.onclick = () => {
+                this.showCreateComposer();
+            };
+        }
+
+        if (authorization !== "full-access") {
+            const emptyState = listContainer.createDiv({ cls: "reminders-empty-state" });
+            emptyState.createDiv({ text: "🔒", cls: "reminders-empty-icon" });
+            emptyState.createDiv({
+                text: authorization === "denied" ? "未授权访问提醒事项" : "无法读取提醒事项",
+                cls: "reminders-empty-title",
+            });
+            emptyState.createDiv({
+                text: authorization === "denied"
+                    ? REMINDERS_AUTHORIZATION_INSTRUCTIONS
+                    : `无法读取提醒事项。${REMINDERS_AUTHORIZATION_INSTRUCTIONS}`,
+                cls: "reminders-empty-desc",
+            });
+            return;
+        }
 
         if (reminders.length === 0) {
             const emptyState = listContainer.createDiv({ cls: "reminders-empty-state" });

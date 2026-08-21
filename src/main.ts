@@ -1,4 +1,5 @@
 import { App, Plugin, Platform, PluginSettingTab, Setting } from "obsidian";
+import { REMINDERS_AUTHORIZATION_INSTRUCTIONS } from "./reminders-result";
 import { ReminderStorage } from "./storage";
 import { RemindersView, VIEW_TYPE_REMINDERS } from "./views/RemindersView";
 
@@ -88,6 +89,10 @@ class RemindersSettingTab extends PluginSettingTab {
         const { containerEl } = this;
 
         containerEl.empty();
+
+        new Setting(containerEl)
+            .setName("系统授权")
+            .setDesc(REMINDERS_AUTHORIZATION_INSTRUCTIONS);
 
         new Setting(containerEl)
             .setName("列表配置")

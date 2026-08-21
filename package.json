@@ -1,6 +1,6 @@
 {
   "name": "lite-reminders",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "macOS Reminders integration with a lightweight, flash-note style interface.",
   "main": "main.js",
   "scripts": {
@@ -10,7 +10,7 @@
     "build-deploy": "npm run build && node deploy.mjs",
     "format": "prettier --write .",
     "lint": "eslint \"**/*.{ts,tsx}\"",
-    "test": "echo \"No tests yet\"",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test src/__tests__/*.test.ts",
     "version": "node version-bump.mjs && git add manifest.json versions.json",
     "release": "node release.mjs"
   },

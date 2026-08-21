@@ -1,5 +1,7 @@
 import { exec } from "child_process";
-import { Reminder } from "./types";
+import { parseRemindersResult } from "./reminders-result";
+import type { RemindersLoadResult } from "./reminders-result";
+import type { Reminder } from "./types";
 import { Notice, Platform } from "obsidian";
 
 const execAsync = (command: string, options: { timeout: number }): Promise<string> => {
@@ -58,37 +60,12 @@ export class ReminderStorage {
             .replace(/\n/g, "\\n");
     }
 
-    async getAllReminders(): Promise<Reminder[]> {
+    async getAllReminders(): Promise<RemindersLoadResult> {
         const listName = this.escapeJXA(this.listName);
-        const script = `ObjC.import("EventKit");var store=$.EKEventStore.alloc.init;var status=$.EKEventStore.authorizationStatusForEntityType(1);if(status!=3){store.requestAccessToEntityTypeCompletion(1,null);delay(3);}var cals=store.calendarsForEntityType(1);var predicate=store.predicateForRemindersInCalendars(cals);var allReminders=store.remindersMatchingPredicate(predicate);var result=[];var valid=function(n,min,max){n=Number(n);return isFinite(n)&&n>=min&&n<=max;};for(var i=0;i<allReminders.count;i++){var r=allReminders.objectAtIndex(i);if(r.completed)continue;var cal=ObjC.unwrap(r.calendar.title);if(cal!=="${listName}")continue;var item={title:ObjC.unwrap(r.title),id:ObjC.unwrap(r.calendarItemIdentifier),list:cal};var comps=r.dueDateComponents;if(comps){var y=Number(comps.year),m=Number(comps.month),d=Number(comps.day);if(valid(y,1,9999)&&valid(m,1,12)&&valid(d,1,31)){var h=Number(comps.hour),minute=Number(comps.minute);if(!valid(h,0,23))h=0;if(!valid(minute,0,59))minute=0;var due=new Date(y,m-1,d,h,minute);if(!isNaN(due.getTime()))item.due=due.toISOString();}}result.push(item);}JSON.stringify(result);`;
+        const script = `ObjC.import("EventKit");var store=$.EKEventStore.alloc.init;var status=Number($.EKEventStore.authorizationStatusForEntityType(1));var result=[];if(status!==2){if(status!==3){store.requestAccessToEntityTypeCompletion(1,null);delay(3);}var cals=store.calendarsForEntityType(1);var predicate=store.predicateForRemindersInCalendars(cals);var allReminders=store.remindersMatchingPredicate(predicate);var valid=function(n,min,max){n=Number(n);return isFinite(n)&&n>=min&&n<=max;};for(var i=0;i<allReminders.count;i++){var r=allReminders.objectAtIndex(i);if(r.completed)continue;var cal=ObjC.unwrap(r.calendar.title);if(cal!=="${listName}")continue;var item={title:ObjC.unwrap(r.title),id:ObjC.unwrap(r.calendarItemIdentifier),list:cal};var comps=r.dueDateComponents;if(comps){var y=Number(comps.year),m=Number(comps.month),d=Number(comps.day);if(valid(y,1,9999)&&valid(m,1,12)&&valid(d,1,31)){var h=Number(comps.hour),minute=Number(comps.minute);if(!valid(h,0,23))h=0;if(!valid(minute,0,59))minute=0;var due=new Date(y,m-1,d,h,minute);if(!isNaN(due.getTime()))item.due=due.toISOString();}}result.push(item);}}JSON.stringify({authorizationStatus:status,reminders:result});`;
 
         const result = await this.runJXA(script);
-        if (!result) return [];
-
-        try {
-            const parsed: unknown = JSON.parse(result);
-            if (!Array.isArray(parsed)) return [];
-            return parsed.filter(
-                (item): item is Reminder =>
-                    item !== null &&
-                    typeof item === "object" &&
-                    typeof (item as Record<string, unknown>).id === "string" &&
-                    typeof (item as Record<string, unknown>).title === "string"
-            ).map((item) => {
-                const obj = item as Record<string, unknown>;
-                return {
-                    id: obj.id as string,
-                    title: obj.title as string,
-                    list: typeof obj.list === "string" ? obj.list : "",
-                    due: typeof obj.due === "string" ? obj.due : undefined,
-                    completed: false,
-                    created: "",
-                    updated: "",
-                };
-            });
-        } catch {
-            return [];
-        }
+        return parseRemindersResult(result);
     }
 
     async getLists(): Promise<string[]> {
